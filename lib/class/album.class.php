@@ -516,12 +516,12 @@ class Album extends database_object implements library_item
             $disk          = 1;
             $album_artist  = null;
         }
-        if (isset(self::$_mapcache[$name][$disk][$year][$original_year][$mbid][$mbid_group][$album_artist])) {
-            return self::$_mapcache[$name][$disk][$year][$original_year][$mbid][$mbid_group][$album_artist];
+        if (isset(self::$_mapcache[$name][$disk][$mbid][$mbid_group][$album_artist])) {
+            return self::$_mapcache[$name][$disk][$mbid][$mbid_group][$album_artist];
         }
 
-        $sql    = "SELECT MIN(`album`.`id`) AS `id` FROM `album` WHERE (`album`.`name` = ? OR LTRIM(CONCAT(COALESCE(`album`.`prefix`, ''), ' ', `album`.`name`)) = ?) AND `album`.`disk` = ? AND `album`.`year` = ? ";
-        $params = array($name, $name, $disk, $year);
+        $sql    = "SELECT MIN(`album`.`id`) AS `id` FROM `album` WHERE (`album`.`name` = ? OR LTRIM(CONCAT(COALESCE(`album`.`prefix`, ''), ' ', `album`.`name`)) = ?) AND `album`.`disk` = ?";
+        $params = array($name, $name, $disk);
 
         if ($mbid) {
             $sql .= 'AND `album`.`mbid` = ? ';
@@ -537,10 +537,6 @@ class Album extends database_object implements library_item
             $sql .= 'AND `album`.`album_artist` = ? ';
             $params[] = $album_artist;
         }
-        if ($original_year) {
-            $sql .= 'AND `album`.`original_year` = ? ';
-            $params[] = $original_year;
-        }
         if ($release_type) {
             $sql .= 'AND `album`.`release_type` = ? ';
             $params[] = $release_type;
@@ -552,7 +548,7 @@ class Album extends database_object implements library_item
             $album_id = (int) $row['id'];
             if ($album_id > 0) {
                 // cache the album id against it's details
-                self::$_mapcache[$name][$disk][$year][$original_year][$mbid][$mbid_group][$album_artist] = $album_id;
+                self::$_mapcache[$name][$disk][$mbid][$mbid_group][$album_artist] = $album_id;
 
                 return $album_id;
             }
@@ -580,7 +576,7 @@ class Album extends database_object implements library_item
             }
         }
 
-        self::$_mapcache[$name][$disk][$year][$original_year][$mbid][$mbid_group][$album_artist] = $album_id;
+        self::$_mapcache[$name][$disk][$mbid][$mbid_group][$album_artist] = $album_id;
 
         return $album_id;
     }
@@ -681,8 +677,7 @@ class Album extends database_object implements library_item
         }
         $results       = array();
         $where         = "WHERE `album`.`mbid` $mbid AND `album`.`release_type` $release_type AND " .
-                         "(`album`.`name` = '$full_name' OR LTRIM(CONCAT(COALESCE(`album`.`prefix`, ''), ' ', `album`.`name`)) = '$full_name') " .
-                         "AND `album`.`year` = $year ";
+                         "(`album`.`name` = '$full_name' OR LTRIM(CONCAT(COALESCE(`album`.`prefix`, ''), ' ', `album`.`name`)) = '$full_name') ";
         $catalog_where = "";
         $catalog_join  = "LEFT JOIN `catalog` ON `catalog`.`id` = `song`.`catalog`";
 
